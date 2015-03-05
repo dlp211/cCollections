@@ -1,121 +1,101 @@
-#include <stdio.h>
-#include <string.h>
-#include "sda.h"
+/*
+ * Author:  David L Patrzeba
+ * Email:   david.patrzeba(at)gmail.com
+ * File(s): sda.h, sda.c
+ * License: MIT
+ * Version: 0.1
+ *
+ * Simple Dynamic Array
+ * ====================
+ * sda (Simple Dynamic Array) is a managed vector container that can be used
+ * like a normal dynamically created array. This means that it can be used
+ * in functions like qsort, or easily dereferenced to get to the underlying
+ * struct to read or update, but not create. In order to create you must use
+ * sdaAdd() in order to append to the sda, unless you preset the size using
+ * the sdaInit() function.
+ *
+ * Inspiration for this came from the sds project.
+ * This API is not stable.
+ *
+ */
+#ifndef _SDA_H_
+#define _SDA_H_
 
-sda_t sdaNew(size_t sizeOf) {
-  return sdaInit(NULL, 0, 1, sizeOf);
-}
+#include <stdlib.h>
+#include <stdint.h>
 
-sda_t sdaInit(sda_t sda, long size, long capacity, size_t sizeOf) {
-  sdaHeader_t *sdaH;
-  if (size < 0 || capacity < 0) {
-    fprintf(stderr, "Size: %ld \tCapacity: %ld\t not valid\n", size, capacity);
-    return NULL;
-  }
+typedef void* sda_t;
+typedef char byte;
+typedef void (*deepFreeFunc_t)(const void*);
 
-  sdaH = malloc( sizeof(sdaHeader_t) + (sizeOf * capacity) );
+typedef struct {
+    uint32_t    capacity;
+    uint32_t    size;
+    size_t      sizeOf;
+    byte        arr[];
+} sdaHeader_t;
 
-  if (sdaH == NULL) {
-    fprintf(stderr, "malloc failed to allocate for an sdaHeader_t\n");
-    exit(EXIT_FAILURE);
-  }
 
-  if (sda != NULL) {
-    //TODO: Copy into our structure
-    //Will be NULL for all uses in this project
-  }
-  sdaH->capacity = capacity;
-  sdaH->size = size;
-  sdaH->sizeOf = sizeOf;
-
-  return sdaH->arr;
-}
-
-sda_t sdaZero(sda_t sda) {
+static inline uint32_t sdaSize(sda_t sda) {
   sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
-  sdaH->size = 0;
-  return sda;
+  return sdaH->size;
 }
 
-
-void* grow(sdaHeader_t *sdaH, uint32_t capacity) {
-
-  if (sdaH->capacity == UINT32_MAX) {
-    fprintf(stderr, "Max capacity already met\n");
-    return sdaH;
-  }
-
-  if (sdaH->capacity == 0) {
-    sdaH->capacity = 1;
-  }
-
-  if (capacity == 0) {
-    if (sdaH->capacity >= 1 << 31) {
-      sdaH->capacity |= 0xFFFFFFFF;
-    }
-    else {
-      sdaH->capacity <<= 1;
-    }
-  }
-  else {
-    sdaH->capacity = capacity;
-  }
-
-  return realloc( sdaH, sizeof(sdaHeader_t) + sdaH->capacity * sdaH->sizeOf );
+static inline uint32_t sdaCapacity(sda_t sda) {
+  sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
+  return sdaH->capacity;
 }
 
 /*
- * UNSTABLE
+ * Creation function.
+ *
+ * sdaNew() takes the sizeof the struct that you wish to place in the container
+ * and return a new sda_t with size 0 and a capacity of 1.
+ *
+ * sdaInit() is currently incomplete and sda needs to be NULL. sdaInit can be
+ * used to skip the need to use sdaAdd in order to copy values into the struct
+ * and update the size by setting the capacity and the size appropriately.
  */
-sda_t sdaSetCapacity(sda_t sda, long capacity) {
-  /* validate capacity */
-  sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
-  if (sdaH->size > capacity) {
-    fprintf(stderr, "capacity must be greater than or equal to size\n");
-    return NULL;
-  }
-  if (sdaH->capacity < capacity) {
-    grow(sdaH, capacity);
-  }
-  sdaH->capacity = capacity;
-  return sda;
-}
+sda_t sdaNew(size_t sizeOf);
+sda_t sdaInit(sda_t sda, long size, long capacity, size_t sizeOf);
 
-sda_t sdaAdd(sda_t sda, void* obj) {
+/*
+ * Allows you to set the capacity of the sda.  Capacity must be greater than
+ * or equal to size and must be less than or equal to UINT32_MAX.
+ *
+ * UNSTABLE.
+ */
+sda_t sdaSetCapacity(sda_t sda, long capacity);
 
-  void *addAt;
-  sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
+/*
+ * sdaAdd() is the prefered method for adding objects to the container. It is
+ * best to use a struct on the stack that you update and pass a pointer to in
+ * order to add to the array.
+ */
+sda_t sdaAdd(sda_t sda, void* obj);
 
-  if (sdaH->size == sdaH->capacity) {
-    sdaH = grow(sdaH, 0);
-    if (sdaH == NULL) {
-      fprintf(stderr, "realloc failed to grow the sda; data is lost\n");
-      exit(EXIT_FAILURE);
-    }
-    sda = sdaH->arr;
-  }
+/*
+ * Sets size to zero thus invalidating the values in the vector.  Accessing a
+ * value in the vector that is greater than size is undefined.
+ */
+sda_t sdaZero(sda_t sda);
 
-  addAt = sda + (sdaH->size++ * sdaH->sizeOf);
+/*
+ * Destruction functions.
+ *
+ * sdaFree() is a simple free of the entire structure which includes the header
+ * information as well as the vector. O(1).
+ *
+ * sdaDeepFree() is used for structs that contain pointers to other structures
+ * that must be free'd ahead of releasing the entire structure. O(n).
+ * If the df function is NULL, sdaFree() is performed.
+ *
+ * df should be a pointer function that takes a pointer to the parent struct.
+ * df should only free child or deeper rooted structs and not the parent
+ * struct pointer as that will be free'd with the entire sda structure.
+ */
+void sdaFree(sda_t sda);
+void sdaDeepFree(sda_t sda, deepFreeFunc_t df);
 
-  memcpy(addAt, obj, sdaH->sizeOf);
-
-  return sdaH->arr;
-}
-
-void sdaFree(sda_t sda) {
-  sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
-  free(sdaH);
-}
-
-void sdaDeepFree(sda_t sda, deepFreeFunc_t df) {
-  uint32_t i;
-  sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
-  uint32_t size = sdaH->size;
-  uint32_t sizeOf = sdaH->sizeOf;
-
-  for ( i = 0; i < size; ++i ) {
-    df(sda + (i * sizeOf));
-  }
-  sdaFree(sda);
-}
+#endif
 
