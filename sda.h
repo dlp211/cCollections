@@ -57,7 +57,7 @@ static inline uint32_t sdaCapacity(sda_t sda) {
  * and update the size by setting the capacity and the size appropriately.
  */
 sda_t sdaNew(size_t sizeOf);
-sda_t sdaInit(sda_t sda, long size, long capacity, size_t sizeOf);
+sda_t sdaInit(uint32_t size, uint32_t capacity, size_t sizeOf);
 
 /*
  * Allows you to set the capacity of the sda.  Capacity must be greater than
@@ -65,7 +65,7 @@ sda_t sdaInit(sda_t sda, long size, long capacity, size_t sizeOf);
  *
  * UNSTABLE.
  */
-sda_t sdaSetCapacity(sda_t sda, long capacity);
+sda_t sdaSetCapacity(sda_t sda, uint32_t capacity);
 
 /*
  * sdaAdd() is the prefered method for adding objects to the container. It is

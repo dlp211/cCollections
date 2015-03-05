@@ -6,13 +6,8 @@ sda_t sdaNew(size_t sizeOf) {
   return sdaInit(NULL, 0, 1, sizeOf);
 }
 
-sda_t sdaInit(sda_t sda, long size, long capacity, size_t sizeOf) {
+sda_t sdaInit(uint32_t size, uint32_t capacity, size_t sizeOf) {
   sdaHeader_t *sdaH;
-  if (size < 0 || capacity < 0) {
-    fprintf(stderr, "Size: %ld \tCapacity: %ld\t not valid\n", size, capacity);
-    return NULL;
-  }
-
   sdaH = malloc( sizeof(sdaHeader_t) + (sizeOf * capacity) );
 
   if (sdaH == NULL) {
@@ -20,10 +15,6 @@ sda_t sdaInit(sda_t sda, long size, long capacity, size_t sizeOf) {
     exit(EXIT_FAILURE);
   }
 
-  if (sda != NULL) {
-    //TODO: Copy into our structure
-    //Will be NULL for all uses in this project
-  }
   sdaH->capacity = capacity;
   sdaH->size = size;
   sdaH->sizeOf = sizeOf;
@@ -36,7 +27,6 @@ sda_t sdaZero(sda_t sda) {
   sdaH->size = 0;
   return sda;
 }
-
 
 void* grow(sdaHeader_t *sdaH, uint32_t capacity) {
 
@@ -82,7 +72,6 @@ sda_t sdaSetCapacity(sda_t sda, long capacity) {
 }
 
 sda_t sdaAdd(sda_t sda, void* obj) {
-
   void *addAt;
   sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
 
