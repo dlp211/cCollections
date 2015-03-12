@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include "sda.h"
 
-typedef int32_t (hash_ft*)(void *const);
+typedef uint32_t (hash_ft*)(void *const);
 typedef int32_t (equals_ft*)(void *const, void *const);
 
 typedef struct {
@@ -23,6 +23,9 @@ typedef struct {
     hash_ft     hash;
     equals_ft   equals;
 } hash_t;
+
+uint32_t hashString(void *const);
+
 
 void hashNew();
 void hashInit();
