@@ -1,5 +1,7 @@
 
 #include <stdlib.h>
+#include <string.h>
+#include "list.h"
 
 List *ListNew(const size_t sizeOfKey, const size_t sizeOfValue) {
   List *list = malloc(sizeof(List));
@@ -9,7 +11,7 @@ List *ListNew(const size_t sizeOfKey, const size_t sizeOfValue) {
   list->tail = NULL;
   list->size = 0;
   list->keySize = sizeOfKey;
-  list->valueSuze = sizeOfValue;
+  list->valueSize = sizeOfValue;
   return list;
 }
 
@@ -17,7 +19,7 @@ Node *ListInsert(List *const list, void *const key, void *const value) {
   Node *node;
 
   if (!list || !key)
-    return list;
+    return NULL;
 
   node = malloc(sizeof(Node) + list->keySize + list->valueSize);
   if (!node)
@@ -33,7 +35,7 @@ Node *ListInsert(List *const list, void *const key, void *const value) {
     list->head = list->tail = node;
   } else {
     node->next = list->head;
-    list->head.prev = node;
+    list->head->prev = node;
     list->head = node;
   }
   ++list->size;
@@ -50,7 +52,7 @@ bool ListRemove(List *const list, void *const key, CompareFn compare) {
   for (node = list->head; node != NULL; node = node->next) {
     if (0 == (compare(key, node->keyValuePair))) {
       if (node == list->head) {
-        node->next->prev = null;
+        node->next->prev = NULL;
         list->head = node->next;
         free(node); /* FIXME: if the keyvalue is complex this doesn't work */
       }
@@ -67,11 +69,12 @@ bool ListRemove(List *const list, void *const key, CompareFn compare) {
       list->size--;
       return true;
     }
+  }
   return false;
 }
 
 void *ListGet(List *const list, void *const key, CompareFn compare) {
-  Node *node
+  Node *node;
 
   if (!list || !key)
     return NULL;
@@ -80,7 +83,7 @@ void *ListGet(List *const list, void *const key, CompareFn compare) {
     if (0 == (compare(key, node->keyValuePair))) {
       return node->keyValuePair + list->keySize;
     }
-
+  }
   return NULL;
 }
 

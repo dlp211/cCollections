@@ -5,13 +5,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef void (DeepFreeFn)(void *const, void *const);
-typedef char[] byte;
+typedef void (*DeepFreeFn)(void *const, void *const);
+typedef int32_t (*CompareFn)(void *const, void *const);
+typedef char byte;
 
 typedef struct node {
     struct node *next;
     struct node *prev;
-    byte        keyValuePair;
+    byte        keyValuePair[];
 } Node;
 
 typedef struct list {
@@ -24,9 +25,9 @@ typedef struct list {
 
 
 List *ListNew(const size_t key, const size_t value);
-List *ListInsert(List *const list, void *const key, void *const value);
-bool ListRemove(List *const list, void *const key);
-void *ListGet(List *const list, void *const key);
+Node *ListInsert(List *const list, void *const key, void *const value);
+bool ListRemove(List *const list, void *const key, CompareFn compare);
+void *ListGet(List *const list, void *const key, CompareFn compare);
 void ListFree(List *const list);
 void ListDeepFree(List *const list, DeepFreeFn df);
 
