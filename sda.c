@@ -3,7 +3,7 @@
 #include "sda.h"
 
 sda_t sdaNew(size_t sizeOf) {
-  return sdaInit(NULL, 0, 1, sizeOf);
+  return sdaInit(0, 1, sizeOf);
 }
 
 sda_t sdaInit(uint32_t size, uint32_t capacity, size_t sizeOf) {
@@ -57,7 +57,7 @@ void* grow(sdaHeader_t *sdaH, uint32_t capacity) {
 /*
  * UNSTABLE
  */
-sda_t sdaSetCapacity(sda_t sda, long capacity) {
+sda_t sdaSetCapacity(sda_t sda, uint32_t capacity) {
   /* validate capacity */
   sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
   if (sdaH->size > capacity) {
@@ -106,7 +106,7 @@ sda_t sdaRemoveLast(sda_t sda) {
   if (!val)
     return NULL;
 
-  memcpy(val, sda->arr + sdaH->size, sdaH->sizeOf);
+  memcpy(val, sdaH->arr + sdaH->size, sdaH->sizeOf);
   return val;
 }
 
