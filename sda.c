@@ -91,6 +91,25 @@ sda_t sdaAdd(sda_t sda, void* obj) {
   return sdaH->arr;
 }
 
+sda_t sdaRemoveLast(sda_t sda) {
+  void *val;
+  sdaHeader_t *sdaH;
+  if (!sda)
+    return NULL;
+
+  sdaH = (void*)(sda - sizeof(sdaHeader_t));
+  if (sdaH->size == 0)
+    return NULL;
+
+  sdaH->size--; /*TODO: Shrink check*/
+  val = malloc(sdaH->sizeOf);
+  if (!val)
+    return NULL;
+
+  memcpy(val, sda->arr + sdaH->size, sdaH->sizeOf);
+  return val;
+}
+
 void sdaFree(sda_t sda) {
   sdaHeader_t *sdaH = (void*)(sda - sizeof(sdaHeader_t));
   free(sdaH);

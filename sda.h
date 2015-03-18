@@ -75,6 +75,12 @@ sda_t sdaSetCapacity(sda_t sda, uint32_t capacity);
 sda_t sdaAdd(sda_t sda, void* obj);
 
 /*
+ * sdaRemoveLast() will pull the value out of the array and create a copy of
+ * the value to be used outside of the sda.
+ */
+sda_t sdaRemoveLast(sda_t sda);
+
+/*
  * Sets size to zero thus invalidating the values in the vector.  Accessing a
  * value in the vector that is greater than size is undefined.
  */
