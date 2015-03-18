@@ -64,6 +64,7 @@ bool ListRemove(List *const list, void *const key, CompareFn compare) {
         node->next->prev = node->prev;
         free(node); /*FIXME*/
       }
+      list->size--;
       return true;
     }
   return false;
